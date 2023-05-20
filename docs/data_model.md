@@ -1,29 +1,43 @@
-## Database Schema
+## Data Model
 
-### Table: PRODUCT
+### Table: PRODUCTS
 
-| Column    | Type        |
-| --------- | ----------- |
-| ID (PK)   | VARCHAR(50) |
-| Name      | TEXT        |
-| Price     | MONEY       |
-| Inventory | INT         |
-
-### Table: DISCOUNT
-
-| Column      | Type        |
+| Column Name | Data Type   |
 | ----------- | ----------- |
-| ID (PK)     | UUID        |
-| TYPE        | VARCHAR(10) |
-| AMOUNT      | MONEY       |
-| EXPLANATION | TEXT        |
+| id          | VARCHAR(50) |
+| name        | TEXT        |
+| price       | MONEY       |
+| inventory   | INT         |
 
-### Table: RESTRICTION
+### Table: DISCOUNTS
 
-| Column      | Type             |
-| ----------- | ---------------- |
-| ID (PK)     | UUID             |
-| DISCOUNT_ID | UUID (FK)        |
-| PRODUCT_ID  | VARCHAR(50) (FK) |
-| LOWER_BOUND | INT              |
-| UPPER_BOUND | INT              |
+| Column Name   | Data Type      |
+| ------------- | -------------- |
+| id            | UUID           |
+| discount_type | DISCOUNT_TYPE  |
+| amount        | NUMERIC(10, 2) |
+| explanation   | TEXT           |
+
+### Table: RESTRICTIONS
+
+| Column Name | Data Type   |
+| ----------- | ----------- |
+| id          | UUID        |
+| discount_id | UUID        |
+| product_id  | VARCHAR(50) |
+| range       | NUMRANGE    |
+
+### Table: ORDERS
+
+| Column Name  | Data Type |
+| ------------ | --------- |
+| id           | UUID      |
+| created_date | DATE      |
+
+### Table: ORDER_ITEMS
+
+| Column Name | Data Type    |
+| ----------- | ------------ |
+| product_id  | VARCHAR(255) |
+| order_id    | UUID         |
+| quantity    | INT          |

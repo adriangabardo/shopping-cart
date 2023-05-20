@@ -17,6 +17,8 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.1.0",
+    "@types/pg": "^8.6.6",
+    "@types/pg-pool": "^2.0.3",
     "nodemon": "^2.0.22",
     "prettier": "2.8.8",
     "ts-node": "^10.9.1",
@@ -25,6 +27,8 @@
   },
   "dependencies": {
     "dotenv": "^16.0.3",
+    "pg": "^8.11.0",
+    "pg-pool": "^3.6.0",
     "pino": "^8.12.1",
     "pino-pretty": "^10.0.0"
   }
