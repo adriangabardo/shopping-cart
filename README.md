@@ -1,5 +1,17 @@
 # Shopping Cart
 
+## Requirements
+
+- Docker
+
+## Getting Started
+
+Run the following commands to get started
+
+```bash
+docker compose up
+```
+
 ## Resources
 
 ### Dockerfile
