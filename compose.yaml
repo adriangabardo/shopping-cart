@@ -1,0 +1,40 @@
+services:
+  # node-app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   image: cartcli:tag
+  #   depends_on:
+  #     - postgres
+  #     - pgadmin
+
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      # You can set the value of environment variables
+      # in your docker-compose.yml file
+      # Our Node app will use these to connect
+      # to the database
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=root
+    ports:
+      # Standard port for PostgreSQL databases
+      - "5432:5432"
+    volumes:
+      # When the PostgresSQL container is started it will run any scripts
+      # provided in the `docker-entrypoint-initdb.d` directory, this connects
+      # our seed file to that directory so that it gets run
+      - ./bin/database-seed.sql:/docker-entrypoint-initdb.d/database-seed.sql
+
+  # PostgreSQL pgAdmin panel accessible at http://localhost:16543/
+  pgadmin-compose:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "adriangabardo@gmail.com"
+      PGADMIN_DEFAULT_PASSWORD: "Fakepassword123!"
+    ports:
+      - "16543:80"
+    depends_on:
+      - postgres
