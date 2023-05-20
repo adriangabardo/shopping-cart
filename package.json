@@ -1,0 +1,31 @@
+{
+  "name": "shopping-cart",
+  "version": "0.0.1",
+  "description": "A shopping cart with PostgreSQL integration through Node CLI",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "nodemon --exec ts-node src/index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Node",
+    "PostgreSQL",
+    "Postgres",
+    "TypeScript"
+  ],
+  "author": "Adrian Gabardo",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.1.0",
+    "nodemon": "^2.0.22",
+    "prettier": "2.8.8",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "pino": "^8.12.1",
+    "pino-pretty": "^10.0.0"
+  }
+}
