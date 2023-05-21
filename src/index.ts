@@ -2,23 +2,26 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { pool } from '@/util/database';
-import { ProductsRepository } from './repositories/ProductsRepository';
-import { DiscountsRepository } from './repositories/DiscountsRepository';
-import { OrderItemRepository, OrderRepository, RestrictionsRepository } from './repositories';
+import express from 'express';
+import bodyParser from 'body-parser';
+import morgan from 'morgan';
 
-(async () => {
-  const client = await pool.connect();
+import { discounts_router, orders_router, products_router } from './routes';
 
-  const orderRepository = new OrderRepository(client);
+const app = express();
+const port = process.env.EXPRESS_PORT;
 
-  // const orders = await orderRepository.findAll();
-  // console.log('Repository result:', orders);
+app.use(bodyParser.json());
+app.use(morgan('tiny'));
 
-  const order = await orderRepository.findById('579fa14b-263e-4bef-b695-15a98d5a940c');
-  console.log('Repository result:', order);
+app.use('/products', products_router);
+app.use('/discounts', discounts_router);
+app.use('/orders', orders_router);
 
-  client.release();
+app.get('*', function (req, res) {
+  res.status(404).send('Route not available.');
+});
 
-  pool.end();
-})();
+app.listen(port, () => {
+  console.log(`[server]: Server is running at http://localhost:${port}`);
+});

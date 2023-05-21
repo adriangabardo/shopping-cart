@@ -1,0 +1,119 @@
+openapi: 3.0.0
+info:
+  title: Shopping Cart
+  version: 1.0.0
+servers:
+  - url: http://{{baseurl}}
+paths:
+  /products:
+    get:
+      tags:
+        - default
+      summary: GET products
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /discounts:
+    get:
+      tags:
+        - default
+      summary: GET discounts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders:
+    get:
+      tags:
+        - default
+      summary: GET orders
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{id}:
+    get:
+      tags:
+        - default
+      summary: GET orders by ID
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 579fa14b-263e-4bef-b695-15a98d5a940c
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{orderId}/items/{productId}:
+    post:
+      tags:
+        - default
+      summary: POST order item
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                quantity: 10
+      parameters:
+        - name: orderId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 106c9b3f-ef51-4ee2-b6ee-fba2dd4ff8bf
+        - name: productId
+          in: path
+          schema:
+            type: integer
+          required: true
+          example: '234234'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{orderId}/items/{itemId}:
+    get:
+      tags:
+        - default
+      summary: GET order item
+      parameters:
+        - name: orderId
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 579fa14b-263e-4bef-b695-15a98d5a940c
+        - name: itemId
+          in: path
+          schema:
+            type: integer
+          required: true
+          example: '234234'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/:
+    post:
+      tags:
+        - default
+      summary: POST order
+      requestBody:
+        content: {}
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}

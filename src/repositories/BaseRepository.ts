@@ -1,4 +1,4 @@
-import { TABLE_NAME } from '@/types';
+import { TABLE_NAME } from '../types';
 import { Client, PoolClient } from 'pg';
 
 type CompositePK = string[];

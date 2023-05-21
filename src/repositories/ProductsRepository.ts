@@ -1,6 +1,7 @@
-import { Product, TABLE_NAME } from '@/types';
+import { TABLE_NAME } from '../types';
 import { BaseRepository } from './BaseRepository';
-import { isDatabaseError } from '@/util/database';
+import { isDatabaseError } from '../util/database';
+import { Product } from '../types/Entity';
 
 export class ProductsRepository extends BaseRepository<Product> {
   protected TABLE_NAME = TABLE_NAME.PRODUCTS;

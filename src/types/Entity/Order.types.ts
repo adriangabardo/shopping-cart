@@ -1,7 +1,5 @@
-import { OrderItem } from './OrderItem.types';
+import { OrderItemModel, OrderModel } from '../Model';
 
-export interface Order {
-  id: string;
-  items: OrderItem[];
-  total: number;
-}
+export type Order = OrderModel & {
+  items: OrderItemModel[];
+};

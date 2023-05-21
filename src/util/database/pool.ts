@@ -1,5 +1,5 @@
 import Pool from 'pg-pool';
-import { extract_environment_variables } from '@/util/extract_env_vars';
+import { extract_environment_variables } from '../extract_env_vars';
 
 const { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USER } = extract_environment_variables(
   { throwOnError: true },
