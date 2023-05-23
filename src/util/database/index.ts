@@ -1,2 +1,2 @@
+export * from './safe_query';
 export * from './pool';
-export * from './isDatabaseError';

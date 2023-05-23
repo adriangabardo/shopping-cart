@@ -10,6 +10,10 @@ const { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_PORT, DB_USER } = extract_environm
   'DB_DATABASE'
 );
 
+/**
+ * A singleton instance of @see Pool.
+ * Initialized with default values from environment variables.
+ */
 export const pool = new Pool({
   user: DB_USER,
   password: DB_PASSWORD,

@@ -1,7 +1,7 @@
 import { Order } from '../types/Entity/Order.types';
 import { OrderItemModel } from '../types/Model';
-import { isDatabaseError } from '../util/database';
 import { BaseRepository } from './BaseRepository';
+import { safe_query } from '../util/database';
 
 import { DELETE_ORDER, FIND_ALL_ORDERS, FIND_ORDER_BY_ID, INSERT_ORDER } from '../queries/orders';
 
@@ -15,17 +15,11 @@ import {
 
 export class OrderRepository extends BaseRepository<Order> {
   async create(): Promise<Order> {
-    try {
-      const result = await this.client.query(INSERT_ORDER);
+    const result = await safe_query(this.client)(INSERT_ORDER);
 
-      if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].id) throw new Error('Order not created');
+    if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].id) throw new Error('Order not created');
 
-      return await this.findById(result.rows[0].id);
-    } catch (error) {
-      console.log(error);
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
-    }
+    return await this.findById(result.rows[0].id);
   }
 
   update(entity: Order): Promise<Order> {
@@ -33,18 +27,13 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async delete(id: string | string[]): Promise<void> {
-    try {
-      const values = [id];
-      await this.client.query(DELETE_ORDER, values);
-    } catch (error) {
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
-    }
+    const values = [id];
+    await safe_query(this.client)(DELETE_ORDER, values);
   }
 
   async findById(id: string): Promise<Order> {
     const values = [id];
-    const { rows } = await this.client.query(FIND_ORDER_BY_ID, values);
+    const { rows } = await safe_query(this.client)<Order>(FIND_ORDER_BY_ID, values);
 
     if (rows.length < 1) throw new Error('Order not found');
 
@@ -52,7 +41,7 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async findAll(): Promise<Order[]> {
-    const { rows } = await this.client.query(FIND_ALL_ORDERS);
+    const { rows } = await this.client.query<Order>(FIND_ALL_ORDERS);
     return rows;
   }
 
@@ -62,24 +51,17 @@ export class OrderRepository extends BaseRepository<Order> {
    * @param entity - An OrderItemModel entity without a product or discounts.
    */
   async createOrderItem(entity: OrderItemModel): Promise<OrderItemModel> {
-    try {
-      const values = [entity.product_id, entity.order_id, entity.quantity];
+    const values = [entity.product_id, entity.order_id, entity.quantity];
+    const result = await this.client.query(INSERT_ORDER_ITEM, values);
 
-      const result = await this.client.query(INSERT_ORDER_ITEM, values);
-
-      if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].product_id || !result.rows[0].order_id) {
-        throw new Error('Order item not created.');
-      }
-
-      return await this.findOrderItemByProductId({
-        order_id: result.rows[0].order_id,
-        product_id: result.rows[0].product_id,
-      });
-    } catch (error) {
-      console.log('error', error);
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
+    if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].product_id || !result.rows[0].order_id) {
+      throw new Error('Order item not created.');
     }
+
+    return await this.findOrderItemByProductId({
+      order_id: result.rows[0].order_id,
+      product_id: result.rows[0].product_id,
+    });
   }
 
   async findOrderItemsByOrderId({ order_id }: { order_id: string }): Promise<OrderItemModel[]> {

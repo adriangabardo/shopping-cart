@@ -1,6 +1,6 @@
 import { Product } from '../types/Entity';
-import { isDatabaseError } from '../util/database';
 import { BaseRepository } from './BaseRepository';
+import { safe_query } from '../util/database';
 
 import {
   DELETE_PRODUCT,
@@ -12,54 +12,33 @@ import {
 
 export class ProductsRepository extends BaseRepository<Product> {
   async create(entity: Product): Promise<Product> {
-    try {
-      const values = [entity.id, entity.name, entity.price, entity.inventory];
-      await this.client.query(INSERT_PRODUCT, values);
-      return await this.findById(entity.id);
-    } catch (error) {
-      console.log(error);
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
-    }
+    const values = [entity.id, entity.name, entity.price, entity.inventory];
+    await safe_query(this.client)(INSERT_PRODUCT, values);
+    return await this.findById(entity.id);
   }
 
   async update(entity: Product): Promise<Product> {
-    try {
-      const values = [entity.name, entity.price, entity.inventory, entity.id];
-      await this.client.query(UPDATE_PRODUCT, values);
-      return await this.findById(entity.id);
-    } catch (error) {
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
-    }
+    const values = [entity.name, entity.price, entity.inventory, entity.id];
+    await safe_query(this.client)(UPDATE_PRODUCT, values);
+    return await this.findById(entity.id);
   }
 
   async delete(id: string): Promise<void> {
-    try {
-      const values = [id];
-      await this.client.query(DELETE_PRODUCT, values);
-    } catch (error) {
-      if (isDatabaseError(error)) throw new Error(error.detail);
-      else throw error;
-    }
+    const values = [id];
+    await safe_query(this.client)(DELETE_PRODUCT, values);
   }
 
   async findById(id: string): Promise<Product> {
     const values = [id];
 
-    const { rows } = await this.client.query(FIND_PRODUCT_BY_ID, values);
+    const { rows } = await safe_query(this.client)<Product>(FIND_PRODUCT_BY_ID, values);
     if (rows.length < 1) throw new Error('Product not found');
 
-    return {
-      id: rows[0].id,
-      inventory: rows[0].inventory,
-      name: rows[0].name,
-      price: rows[0].price,
-    };
+    return rows[0];
   }
 
   async findAll(): Promise<Product[]> {
-    const { rows } = await this.client.query(FIND_ALL_PRODUCTS);
-    return rows.map<Product>((row) => ({ id: row.id, inventory: row.inventory, name: row.name, price: row.price }));
+    const { rows } = await safe_query(this.client)<Product>(FIND_ALL_PRODUCTS);
+    return rows;
   }
 }
