@@ -1,12 +1,19 @@
 services:
-  # node-app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   image: cartcli:tag
-  #   depends_on:
-  #     - postgres
-  #     - pgadmin
+  node-app:
+    build: .
+    depends_on:
+      # Our app does not work without our database
+      # so this ensures our database is loaded first
+      - postgres
+    ports:
+      - '8080:8080'
+    volumes:
+      # Maps our current project directory `.` to
+      # our working directory in the container
+      - ./:/usr/src/app/
+      # node_modules workaround for volumes
+      # https://stackoverflow.com/a/32785014
+      - /usr/src/app/node_modules
 
   postgres:
     image: postgres:14.1-alpine
@@ -21,12 +28,12 @@ services:
       - POSTGRES_DB=root
     ports:
       # Standard port for PostgreSQL databases
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       # When the PostgresSQL container is started it will run any scripts
       # provided in the `docker-entrypoint-initdb.d` directory, this connects
       # our seed file to that directory so that it gets run
-      # Note that these only run IF THE CONTAINER IS EMPTY, so as soon as the 
+      # Note that these only run IF THE CONTAINER IS EMPTY, so as soon as the
       # database is populated these scripts will not run again
       - ./bin/database-seed.sql:/docker-entrypoint-initdb.d/database-seed.sql
 
@@ -34,9 +41,9 @@ services:
   pgadmin-compose:
     image: dpage/pgadmin4
     environment:
-      PGADMIN_DEFAULT_EMAIL: "adriangabardo@gmail.com"
-      PGADMIN_DEFAULT_PASSWORD: "Fakepassword123!"
+      PGADMIN_DEFAULT_EMAIL: 'adriangabardo@gmail.com'
+      PGADMIN_DEFAULT_PASSWORD: 'Fakepassword123!'
     ports:
-      - "16543:80"
+      - '16543:80'
     depends_on:
       - postgres

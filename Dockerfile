@@ -1,16 +1,24 @@
 # Base image
 FROM node:latest
 
-# Copy the contents of the repo into the /app folder inside the container
-COPY . /app
+# Create app directory
+WORKDIR /usr/src/app
 
-# Set working directory
-WORKDIR /app
+# Install app dependencies
+# A wildcard is used to ensure both package.json AND package-lock.json are copied
+# where available (npm@5+)
+# copying packages first helps take advantage of docker layers
+COPY package.json ./
+COPY yarn.lock ./
+COPY .env ./
 
-# Install dependencies
-RUN npm install
-RUN npm i -g typescript
-RUN tsc
-RUN npm link .
+RUN yarn
 
-ENTRYPOINT ["/usr/local/bin/cart"]
+# Bundle app source
+COPY . .
+
+EXPOSE 8080
+
+RUN [ "yarn", "build" ]
+CMD [ "yarn", "start" ]
+
