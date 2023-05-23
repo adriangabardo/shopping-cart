@@ -9,7 +9,7 @@ paths:
     get:
       tags:
         - default
-      summary: GET products
+      summary: Retrieve products
       responses:
         '200':
           description: Successful response
@@ -19,7 +19,7 @@ paths:
     get:
       tags:
         - default
-      summary: GET discounts
+      summary: Retrieve discounts
       responses:
         '200':
           description: Successful response
@@ -29,7 +29,7 @@ paths:
     get:
       tags:
         - default
-      summary: GET orders
+      summary: Retrieve orders
       responses:
         '200':
           description: Successful response
@@ -39,44 +39,14 @@ paths:
     get:
       tags:
         - default
-      summary: GET orders by ID
+      summary: Retrieve orders by ID
       parameters:
         - name: id
           in: path
           schema:
             type: string
           required: true
-          example: 579fa14b-263e-4bef-b695-15a98d5a940c
-      responses:
-        '200':
-          description: Successful response
-          content:
-            application/json: {}
-  /orders/{orderId}/items/{productId}:
-    post:
-      tags:
-        - default
-      summary: POST order item
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              example:
-                quantity: 10
-      parameters:
-        - name: orderId
-          in: path
-          schema:
-            type: string
-          required: true
-          example: 106c9b3f-ef51-4ee2-b6ee-fba2dd4ff8bf
-        - name: productId
-          in: path
-          schema:
-            type: integer
-          required: true
-          example: '234234'
+          example: 34ce4cd3-52ec-4996-9265-ba917044fb4f
       responses:
         '200':
           description: Successful response
@@ -86,7 +56,7 @@ paths:
     get:
       tags:
         - default
-      summary: GET order item
+      summary: Retrieve order item by order ID and item ID
       parameters:
         - name: orderId
           in: path
@@ -109,9 +79,65 @@ paths:
     post:
       tags:
         - default
-      summary: POST order
+      summary: Create order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                items:
+                  - product_id: 120P90
+                    quantity: 3
+                  - product_id: 43N23P
+                    quantity: 1
+                  - product_id: '234234'
+                    quantity: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{id}/checkout:
+    post:
+      tags:
+        - default
+      summary: Checkout order
       requestBody:
         content: {}
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 22f1315d-7d29-47ac-809e-58a2db19272e
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json: {}
+  /orders/{id}/add:
+    post:
+      tags:
+        - default
+      summary: Add items to order by ID
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                items:
+                  - product_id: '234234'
+                    quantity: 1
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 22f1315d-7d29-47ac-809e-58a2db19272e
       responses:
         '200':
           description: Successful response

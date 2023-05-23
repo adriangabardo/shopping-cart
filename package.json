@@ -1,7 +1,7 @@
 {
   "name": "shopping-cart",
   "version": "0.0.1",
-  "description": "A shopping cart with PostgreSQL integration through Node CLI",
+  "description": "A shopping cart with PostgreSQL and Node Express",
   "main": "dist/index.js",
   "scripts": {
     "build": "npx tsc",
