@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { DiscountsRepository, OrderRepository } from '../../repositories';
 import { pool } from '../../util/database';
 import { calculate_cart_total } from '../../util/calculate_cart_total';
+import { validate_discounts } from '../../util/validate_discounts';
 
 /**
  * Receive a request to get all orders.
@@ -135,10 +136,18 @@ export const ordersCheckout = async (req: Request, res: Response) => {
     // Grab all discounts, later can be filtered down to find by order products' id.
     const discounts = await discountsRepository.findAll();
 
-    // Calculate total cost
-    const pricing = calculate_cart_total(order, discounts);
+    // Evaluate which discounts apply to this order
+    const applicable_discounts = validate_discounts(order, discounts);
 
-    res.send({ ...order, ...pricing });
+    // Calculate total cost
+    const { discountedTotal, total } = calculate_cart_total(order, applicable_discounts);
+
+    res.send({
+      ...order,
+      discountedTotal: discountedTotal.toFixed(2),
+      total: total.toFixed(2),
+      applicableDiscounts: applicable_discounts,
+    });
   } catch (error) {
     console.log('error', error);
     res.status(500).send('Failed to checkout order.');

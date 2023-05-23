@@ -1,33 +1,18 @@
 import { DiscountModel, OrderModel } from '../types/Model';
-import { parse_num_range } from './parse_num_range';
 
+/**
+ * This method calculates the total cost of an order, and the total cost after applying discounts.
+ * @param order - The order to calculate the total cost of.
+ * @param discounts - The discounts to apply to the order. This assumes that the discounts are applicable to the order.
+ * @returns The total cost of the order, and the total cost after applying discounts.
+ */
 export const calculate_cart_total = (
   order: OrderModel,
   discounts: DiscountModel[]
 ): {
   total: number;
   discountedTotal: number;
-  appliedDiscounts: DiscountModel[];
 } => {
-  /**
-   * This filter ensures that the discount is applicable to the order.
-   * To do so, it checks that every restriction from the discount is met.
-   * It tried to find the product in the order items that matches the restriction,
-   * and if it is found, it checks that the quantity is greater than the low bound of the restriction.
-   *
-   * Currently, it only checks the low bound, but it could be extended to check the high bound as well.
-   */
-  const appliedDiscounts = discounts.filter((discount) => {
-    const restrictionsMatched = discount.restrictions.every((restriction) => {
-      const [lowBound] = parse_num_range(restriction.range);
-      const orderedProduct = order.items.find((item) => item.product_id === restriction.product_id);
-
-      return orderedProduct && (!lowBound || orderedProduct.quantity >= lowBound);
-    });
-
-    return restrictionsMatched;
-  });
-
   /**
    * Calculates the initial total cost of the order.
    * Does so by multiplying the quantity of each item by its price and summing all the items.
@@ -40,11 +25,11 @@ export const calculate_cart_total = (
    * Calculates the final discounted total cost of the order.
    * Does so by applying each discount to the total cost.
    */
-  const discountedTotal = appliedDiscounts.reduce((previous, current) => {
+  const discountedTotal = discounts.reduce((previous, current) => {
     if (current.discount_type === 'PERCENTAGE') return previous - previous * current.amount;
     else if (current.discount_type === 'FIXED') return previous - current.amount;
     else return previous;
   }, total);
 
-  return { appliedDiscounts, discountedTotal, total };
+  return { discountedTotal, total };
 };

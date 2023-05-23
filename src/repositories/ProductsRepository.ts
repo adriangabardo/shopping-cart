@@ -1,5 +1,5 @@
 import { BaseRepository } from './BaseRepository';
-import { safe_query } from '../util/database';
+import { safe_query } from '../util/database/safe_query';
 import { ProductModel } from '../types/Model';
 
 import {
