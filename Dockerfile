@@ -2,23 +2,17 @@
 FROM node:latest
 
 # Create app directory
+RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
-
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-# copying packages first helps take advantage of docker layers
-COPY package.json ./
-COPY yarn.lock ./
-COPY .env ./
-
-RUN yarn
 
 # Bundle app source
 COPY . .
 
+RUN yarn
+RUN npm install -g typescript
+RUN tsc
+
 EXPOSE 8080
 
-RUN [ "yarn", "build" ]
-CMD [ "yarn", "start" ]
+CMD [ "node", "./dist/index.js" ]
 
