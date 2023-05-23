@@ -5,5 +5,5 @@ import { DatabaseError } from 'pg';
  * @param x - A value of unknown type.
  * @returns A boolean asserting whether the passed in value is a DatabaseError.
  */
-export const isDatabaseError = (x: unknown): x is DatabaseError =>
+export const is_database_error = (x: unknown): x is DatabaseError =>
   !!x && typeof x === 'object' && 'code' in x && 'detail' in x;

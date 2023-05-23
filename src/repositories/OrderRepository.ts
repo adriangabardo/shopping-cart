@@ -1,5 +1,4 @@
-import { Order } from '../types/Entity/Order.types';
-import { OrderItemModel } from '../types/Model';
+import { OrderItemModel, OrderModel } from '../types/Model';
 import { BaseRepository } from './BaseRepository';
 import { safe_query } from '../util/database';
 
@@ -13,8 +12,13 @@ import {
   UPDATE_ORDER_ITEM,
 } from '../queries/orderItems';
 
-export class OrderRepository extends BaseRepository<Order> {
-  async create(): Promise<Order> {
+export class OrderRepository extends BaseRepository<OrderModel> {
+  /**
+   * Create a new order.
+   * Orders are created with default values, therefore no parameters are required.
+   * @returns The newly created order.
+   */
+  async create(): Promise<OrderModel> {
     const result = await safe_query(this.client)(INSERT_ORDER);
 
     if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].id) throw new Error('Order not created');
@@ -22,35 +26,52 @@ export class OrderRepository extends BaseRepository<Order> {
     return await this.findById(result.rows[0].id);
   }
 
-  update(entity: Order): Promise<Order> {
+  /**
+   * Update an order by its ID.
+   * Currently, this method throws an error, as orders cannot be updated.
+   */
+  update(entity: OrderModel): Promise<OrderModel> {
     throw new Error('Orders cannot currently be updated. Add, update and remove items individually.');
   }
 
-  async delete(id: string | string[]): Promise<void> {
+  /**
+   * Delete an order by its ID.
+   * @param id - The ID of the order.
+   */
+  async delete(id: string): Promise<void> {
     const values = [id];
     await safe_query(this.client)(DELETE_ORDER, values);
   }
 
-  async findById(id: string): Promise<Order> {
+  /**
+   * Find an order by its ID.
+   * @param id - The ID of the order.
+   * @returns The order if found.
+   */
+  async findById(id: string): Promise<OrderModel> {
     const values = [id];
-    const { rows } = await safe_query(this.client)<Order>(FIND_ORDER_BY_ID, values);
+    const { rows } = await safe_query(this.client)<OrderModel>(FIND_ORDER_BY_ID, values);
 
     if (rows.length < 1) throw new Error('Order not found');
 
     return rows[0];
   }
 
-  async findAll(): Promise<Order[]> {
-    const { rows } = await this.client.query<Order>(FIND_ALL_ORDERS);
+  /**
+   * Find all orders in the database.
+   * @returns An array of orders.
+   */
+  async findAll(): Promise<OrderModel[]> {
+    const { rows } = await this.client.query<OrderModel>(FIND_ALL_ORDERS);
     return rows;
   }
 
   /**
    * Create a new order item in the database.
    * Product and Discounts are dynamically selected from the database.
-   * @param entity - An OrderItemModel entity without a product or discounts.
+   * @param entity - An OrderItemModel entity without product_name or product_price.
    */
-  async createOrderItem(entity: OrderItemModel): Promise<OrderItemModel> {
+  async createOrderItem(entity: Omit<OrderItemModel, 'product_name' | 'product_price'>): Promise<OrderItemModel> {
     const values = [entity.product_id, entity.order_id, entity.quantity];
     const result = await this.client.query(INSERT_ORDER_ITEM, values);
 
@@ -64,6 +85,11 @@ export class OrderRepository extends BaseRepository<Order> {
     });
   }
 
+  /**
+   * Find all order items for a given order.
+   * @param options.order_id - The order ID to find order items for.
+   * @returns An array of order items.
+   */
   async findOrderItemsByOrderId({ order_id }: { order_id: string }): Promise<OrderItemModel[]> {
     const values = [order_id];
 
@@ -73,6 +99,12 @@ export class OrderRepository extends BaseRepository<Order> {
     return rows;
   }
 
+  /**
+   * Find a single order item by order ID and product ID.
+   * @param options.order_id - The order ID to find order items for.
+   * @param options.product_id - The product ID to find order items for.
+   * @returns The order item, if found.
+   */
   async findOrderItemByProductId({
     order_id,
     product_id,
@@ -89,6 +121,11 @@ export class OrderRepository extends BaseRepository<Order> {
     return rows[0];
   }
 
+  /**
+   * Update an order item in the database.
+   * @param entity - An OrderItemModel entity with updated values.
+   * @returns The updated order item.
+   */
   async updateOrderItem(entity: OrderItemModel): Promise<OrderItemModel> {
     const values = [entity.quantity, entity.order_id, entity.product_id];
 
@@ -99,7 +136,12 @@ export class OrderRepository extends BaseRepository<Order> {
     });
   }
 
-  async deleteOrderItem(order_id: string, product_id: string): Promise<void> {
+  /**
+   * Delete an order item from the database.
+   * @param options.order_id - The order ID to find order items for.
+   * @param options.product_id - The product ID to find order items for.
+   */
+  async deleteOrderItem({ order_id, product_id }: { order_id: string; product_id: string }): Promise<void> {
     const values = [order_id, product_id];
 
     await this.client.query(DELETE_ORDER_ITEM, values);

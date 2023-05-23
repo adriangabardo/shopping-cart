@@ -9,9 +9,12 @@ import express_winston from 'express-winston';
 import winston from 'winston';
 
 import { discounts_router, orders_router, products_router } from './routes';
+import { extract_environment_variables } from './util';
+
+const { EXPRESS_PORT } = extract_environment_variables({ throwOnError: false }, 'EXPRESS_PORT');
 
 const app = express();
-const port = process.env.EXPRESS_PORT;
+const port = EXPRESS_PORT ?? 8000;
 
 const logTransports = [new winston.transports.Console()];
 const logFormat = winston.format.combine(
@@ -29,6 +32,7 @@ app.use('/products', products_router);
 app.use('/discounts', discounts_router);
 app.use('/orders', orders_router);
 
+// Fallback route that returns 404
 app.get('*', function (req, res) {
   res.status(404).send('Route not available.');
 });

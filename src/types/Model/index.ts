@@ -1,5 +1,6 @@
 /**
- * The Model typings represent data as they are found in the database.
+ * Model interfaces representing the data in the database, and how they should be represented in the API.
+ * This includes fields that are persisted in multiple tables, and joined by queries.
  */
 
 export * from './DiscountModel.types';

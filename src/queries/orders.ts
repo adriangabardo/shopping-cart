@@ -15,7 +15,8 @@ export const FIND_ORDER_BY_ID = `
             'product_id', order_item.product_id,
             'order_id', order_item.order_id,
             'quantity', order_item.quantity,
-            'name', product.name
+            'product_name', product.name,
+            'product_price', CAST(product.price AS numeric)
           )) FILTER (WHERE order_item.product_id IS NOT NULL),
           '[]'
         ) AS items
@@ -38,7 +39,8 @@ export const FIND_ALL_ORDERS = `
             'product_id', order_item.product_id,
             'order_id', order_item.order_id,
             'quantity', order_item.quantity,
-            'name', product.name
+            'product_name', product.name,
+            'product_price', CAST(product.price AS numeric)
             )) FILTER (WHERE order_item.product_id IS NOT NULL),
             '[]'
         ) AS items

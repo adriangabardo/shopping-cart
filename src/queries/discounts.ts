@@ -12,9 +12,9 @@ export const FIND_DISCOUNT_BY_ID = `
     SELECT discount.*,
         json_agg(json_build_object(
             'id', restriction.id,
-            'discountId', restriction.discount_id,
-            'productId', restriction.product_id,
-            'productName', product.name,
+            'discount_id', restriction.discount_id,
+            'product_id', restriction.product_id,
+            'product_name', product.name,
             'range', restriction.range
         )) AS restrictions
     FROM ${TABLE_NAME.DISCOUNTS} discount
@@ -22,7 +22,7 @@ export const FIND_DISCOUNT_BY_ID = `
     JOIN ${TABLE_NAME.PRODUCTS} product ON restriction.product_id = product.id
     WHERE discount.id = $1
     GROUP BY discount.id;
-`;
+ `;
 
 /**
  * This query finds all discounts, joining all restrictions which discount_id matches the discount's ID.
@@ -32,9 +32,9 @@ export const FIND_ALL_DISCOUNTS = `
     SELECT discount.*,
         json_agg(json_build_object(
             'id', restriction.id,
-            'discountId', restriction.discount_id,
-            'productId', restriction.product_id,
-            'productName', product.name,
+            'discount_id', restriction.discount_id,
+            'product_id', restriction.product_id,
+            'product_name', product.name,
             'range', restriction.range
         )) AS restrictions
     FROM ${TABLE_NAME.DISCOUNTS} discount

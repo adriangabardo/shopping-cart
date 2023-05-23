@@ -1,23 +1,27 @@
 import { Request, Response } from 'express';
 
-import { OrderRepository } from '../../repositories';
+import { DiscountsRepository, OrderRepository } from '../../repositories';
 import { pool } from '../../util/database';
-import { calculate_total_cost } from '../../util/total_cost';
-import { uniqueDiscounts } from '../../util/unique_discounts';
+import { calculate_cart_total } from '../../util/calculate_cart_total';
 
+/**
+ * Receive a request to get all orders.
+ * Responds with all orders.
+ */
 export const ordersGet = async (_req: Request, res: Response) => {
   const client = await pool.connect();
 
   await new OrderRepository(client)
     .findAll()
     .then((orders) => res.send(orders))
-    .catch((err) => {
-      console.log(err);
-      res.status(500).send('Failed to retrieve orders.');
-    })
+    .catch(() => res.status(500).send('Failed to retrieve orders.'))
     .finally(() => client.release());
 };
 
+/**
+ * Receive a request to get a single order.
+ * Responds with the order.
+ */
 export const ordersGetByID = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
@@ -28,6 +32,10 @@ export const ordersGetByID = async (req: Request, res: Response) => {
     .finally(() => client.release());
 };
 
+/**
+ * Receive a request to get all items for a single order.
+ * Responds with the order items.
+ */
 export const orderItemsGetByID = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
@@ -41,6 +49,10 @@ export const orderItemsGetByID = async (req: Request, res: Response) => {
     .finally(() => client.release());
 };
 
+/**
+ * Receive a request to create an order.
+ * Responds with the created order.
+ */
 export const ordersCreate = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
@@ -53,13 +65,13 @@ export const ordersCreate = async (req: Request, res: Response) => {
     if (req.body.items) {
       const { items } = req.body;
       await Promise.all(
-        items.map((item: { product_id: string; quantity: number }) =>
-          orderRepository.createOrderItem({
+        items.map(async (item: { product_id: string; quantity: number }) => {
+          return orderRepository.createOrderItem({
             order_id: id,
             product_id: item.product_id,
             quantity: item.quantity,
-          })
-        )
+          });
+        })
       );
     }
 
@@ -74,15 +86,63 @@ export const ordersCreate = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Receive a request to add items to an order.
+ * Responds with the updated order.
+ */
+export const orderAddItems = async (req: Request, res: Response) => {
+  const client = await pool.connect();
+
+  try {
+    const orderRepository = new OrderRepository(client);
+    const { items } = req.body;
+
+    // Add items to order
+    await Promise.all(
+      items.map(async (item: { product_id: string; quantity: number }) => {
+        await orderRepository.createOrderItem({
+          order_id: req.params.id,
+          product_id: item.product_id,
+          quantity: item.quantity,
+        });
+      })
+    );
+
+    // Re-fetch order to get populated items
+    const order = await orderRepository.findById(req.params.id);
+    res.send(order);
+  } catch (error) {
+    console.log('error', error);
+    res.status(500).send('Failed to add items to order.');
+  } finally {
+    client.release();
+  }
+};
+
+/**
+ * Receive a request to checkout an order.
+ * Responds with the order, and the calculated final price including discounts.
+ */
 export const ordersCheckout = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
-  await new OrderRepository(client)
-    .findById(req.params.id)
-    .then((order) => {
-      const finalCost = calculate_total_cost(order, uniqueDiscounts(order));
-      res.send({ ...order, finalCost });
-    })
-    .catch(() => res.status(500).send('Failed to checkout order.'))
-    .finally(() => client.release());
+  try {
+    const orderRepository = new OrderRepository(client);
+    const order = await orderRepository.findById(req.params.id);
+
+    const discountsRepository = new DiscountsRepository(client);
+
+    // Grab all discounts, later can be filtered down to find by order products' id.
+    const discounts = await discountsRepository.findAll();
+
+    // Calculate total cost
+    const pricing = calculate_cart_total(order, discounts);
+
+    res.send({ ...order, ...pricing });
+  } catch (error) {
+    console.log('error', error);
+    res.status(500).send('Failed to checkout order.');
+  } finally {
+    client.release();
+  }
 };
