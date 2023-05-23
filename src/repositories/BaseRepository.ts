@@ -1,4 +1,3 @@
-import { TABLE_NAME } from '../types';
 import { Client, PoolClient } from 'pg';
 
 type CompositePK = string[];
@@ -8,7 +7,6 @@ type CompositePK = string[];
  * that can be performed against a database table to manage an Entity.
  */
 export abstract class BaseRepository<E> {
-  protected abstract TABLE_NAME: TABLE_NAME;
   protected client: Client & PoolClient;
 
   /**

@@ -1,17 +1,21 @@
-import { TABLE_NAME } from '../types';
-import { BaseRepository } from './BaseRepository';
-import { isDatabaseError } from '../util/database';
 import { Product } from '../types/Entity';
+import { isDatabaseError } from '../util/database';
+import { BaseRepository } from './BaseRepository';
+
+import {
+  DELETE_PRODUCT,
+  FIND_ALL_PRODUCTS,
+  FIND_PRODUCT_BY_ID,
+  INSERT_PRODUCT,
+  UPDATE_PRODUCT,
+} from '../queries/products';
 
 export class ProductsRepository extends BaseRepository<Product> {
-  protected TABLE_NAME = TABLE_NAME.PRODUCTS;
-
   async create(entity: Product): Promise<Product> {
     try {
-      const query = `INSERT INTO ${this.TABLE_NAME} (id, name, price, inventory) VALUES ($1, $2, $3, $4)`;
-
       const values = [entity.id, entity.name, entity.price, entity.inventory];
-      return await this.client.query(query, values).then(() => this.findById(entity.id));
+      await this.client.query(INSERT_PRODUCT, values);
+      return await this.findById(entity.id);
     } catch (error) {
       console.log(error);
       if (isDatabaseError(error)) throw new Error(error.detail);
@@ -21,9 +25,9 @@ export class ProductsRepository extends BaseRepository<Product> {
 
   async update(entity: Product): Promise<Product> {
     try {
-      const query = `UPDATE ${this.TABLE_NAME} SET name = $1, price = $2, inventory = $3 WHERE id = $4`;
       const values = [entity.name, entity.price, entity.inventory, entity.id];
-      return await this.client.query(query, values).then(() => this.findById(entity.id));
+      await this.client.query(UPDATE_PRODUCT, values);
+      return await this.findById(entity.id);
     } catch (error) {
       if (isDatabaseError(error)) throw new Error(error.detail);
       else throw error;
@@ -32,9 +36,8 @@ export class ProductsRepository extends BaseRepository<Product> {
 
   async delete(id: string): Promise<void> {
     try {
-      const query = `DELETE FROM ${this.TABLE_NAME} WHERE id = $1`;
       const values = [id];
-      await this.client.query(query, values);
+      await this.client.query(DELETE_PRODUCT, values);
     } catch (error) {
       if (isDatabaseError(error)) throw new Error(error.detail);
       else throw error;
@@ -42,11 +45,9 @@ export class ProductsRepository extends BaseRepository<Product> {
   }
 
   async findById(id: string): Promise<Product> {
-    const query = `SELECT * FROM ${this.TABLE_NAME} WHERE id = $1`;
     const values = [id];
 
-    const { rows } = await this.client.query(query, values);
-
+    const { rows } = await this.client.query(FIND_PRODUCT_BY_ID, values);
     if (rows.length < 1) throw new Error('Product not found');
 
     return {
@@ -58,9 +59,7 @@ export class ProductsRepository extends BaseRepository<Product> {
   }
 
   async findAll(): Promise<Product[]> {
-    const query = `SELECT * FROM ${this.TABLE_NAME}`;
-
-    const { rows } = await this.client.query(query);
+    const { rows } = await this.client.query(FIND_ALL_PRODUCTS);
     return rows.map<Product>((row) => ({ id: row.id, inventory: row.inventory, name: row.name, price: row.price }));
   }
 }

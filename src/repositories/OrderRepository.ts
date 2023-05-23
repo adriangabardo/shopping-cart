@@ -1,17 +1,22 @@
 import { Order } from '../types/Entity/Order.types';
-import { BaseRepository } from './BaseRepository';
-import { TABLE_NAME } from '../types';
+import { OrderItemModel } from '../types/Model';
 import { isDatabaseError } from '../util/database';
-import { OrderItemModel } from '@/types/Model';
+import { BaseRepository } from './BaseRepository';
+
+import { DELETE_ORDER, FIND_ALL_ORDERS, FIND_ORDER_BY_ID, INSERT_ORDER } from '../queries/orders';
+
+import {
+  DELETE_ORDER_ITEM,
+  FIND_ORDER_ITEM_BY_ORDER_ID,
+  FIND_ORDER_ITEM_BY_ORDER_ID_AND_PRODUCT_ID,
+  INSERT_ORDER_ITEM,
+  UPDATE_ORDER_ITEM,
+} from '../queries/orderItems';
 
 export class OrderRepository extends BaseRepository<Order> {
-  protected TABLE_NAME: TABLE_NAME = TABLE_NAME.ORDERS;
-
   async create(): Promise<Order> {
     try {
-      const query = `INSERT INTO ${this.TABLE_NAME} DEFAULT VALUES RETURNING id`;
-
-      const result = await this.client.query(query);
+      const result = await this.client.query(INSERT_ORDER);
 
       if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].id) throw new Error('Order not created');
 
@@ -29,10 +34,8 @@ export class OrderRepository extends BaseRepository<Order> {
 
   async delete(id: string | string[]): Promise<void> {
     try {
-      const query = `DELETE FROM ${this.TABLE_NAME} WHERE id = $1`;
       const values = [id];
-
-      await this.client.query(query, values);
+      await this.client.query(DELETE_ORDER, values);
     } catch (error) {
       if (isDatabaseError(error)) throw new Error(error.detail);
       else throw error;
@@ -40,26 +43,8 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async findById(id: string): Promise<Order> {
-    const query = `
-      SELECT "order".*,
-        COALESCE(
-          json_agg(json_build_object(
-            'product_id', order_item.product_id,
-            'order_id', order_item.order_id,
-            'quantity', order_item.quantity,
-            'name', product.name
-          )) FILTER (WHERE order_item.product_id IS NOT NULL),
-          '[]'
-        ) AS items
-      FROM ${this.TABLE_NAME} AS "order"
-      LEFT JOIN ${TABLE_NAME.ORDER_ITEM} AS order_item ON "order".id = order_item.order_id
-      LEFT JOIN ${TABLE_NAME.PRODUCTS} AS product ON order_item.product_id = product.id
-      WHERE "order".id = $1
-      GROUP BY "order".id;
-    `;
-
     const values = [id];
-    const { rows } = await this.client.query(query, values);
+    const { rows } = await this.client.query(FIND_ORDER_BY_ID, values);
 
     if (rows.length < 1) throw new Error('Order not found');
 
@@ -67,25 +52,7 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async findAll(): Promise<Order[]> {
-    const query = `
-      SELECT "order".*,
-        COALESCE(
-          json_agg(json_build_object(
-            'product_id', order_item.product_id,
-            'order_id', order_item.order_id,
-            'quantity', order_item.quantity,
-            'name', product.name
-          )) FILTER (WHERE order_item.product_id IS NOT NULL),
-          '[]'
-        ) AS items
-      FROM ${this.TABLE_NAME} AS "order"
-      LEFT JOIN ${TABLE_NAME.ORDER_ITEM} AS order_item ON "order".id = order_item.order_id
-      LEFT JOIN ${TABLE_NAME.PRODUCTS} AS product ON order_item.product_id = product.id
-      GROUP BY "order".id;
-    `;
-
-    const { rows } = await this.client.query(query);
-
+    const { rows } = await this.client.query(FIND_ALL_ORDERS);
     return rows;
   }
 
@@ -96,10 +63,9 @@ export class OrderRepository extends BaseRepository<Order> {
    */
   async createOrderItem(entity: OrderItemModel): Promise<OrderItemModel> {
     try {
-      const query = `INSERT INTO ${TABLE_NAME.ORDER_ITEM} (product_id, order_id, quantity) VALUES ($1, $2, $3) RETURNING product_id, order_id`;
       const values = [entity.product_id, entity.order_id, entity.quantity];
 
-      const result = await this.client.query(query, values);
+      const result = await this.client.query(INSERT_ORDER_ITEM, values);
 
       if (!result || !result.rows || result.rows.length < 1 || !result.rows[0].product_id || !result.rows[0].order_id) {
         throw new Error('Order item not created.');
@@ -117,11 +83,9 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async findOrderItemsByOrderId({ order_id }: { order_id: string }): Promise<OrderItemModel[]> {
-    const query = `SELECT * FROM ${TABLE_NAME.ORDER_ITEM} WHERE order_id = $1`;
     const values = [order_id];
 
-    const { rows } = await this.client.query(query, values);
-
+    const { rows } = await this.client.query(FIND_ORDER_ITEM_BY_ORDER_ID, values);
     if (rows.length < 1) throw new Error('Order items not found');
 
     return rows;
@@ -134,10 +98,9 @@ export class OrderRepository extends BaseRepository<Order> {
     order_id: string;
     product_id: string;
   }): Promise<OrderItemModel> {
-    const query = `SELECT * FROM ${TABLE_NAME.ORDER_ITEM} WHERE order_id = $1 AND product_id = $2`;
     const values = [order_id, product_id];
 
-    const { rows } = await this.client.query(query, values);
+    const { rows } = await this.client.query(FIND_ORDER_ITEM_BY_ORDER_ID_AND_PRODUCT_ID, values);
 
     if (rows.length < 1) throw new Error('Order item not found');
 
@@ -145,15 +108,9 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async updateOrderItem(entity: OrderItemModel): Promise<OrderItemModel> {
-    const query = `
-        UPDATE ${TABLE_NAME.ORDER_ITEM}
-          SET QUANTITY = $1
-        WHERE ORDER_ID = $2 AND PRODUCT_ID = $3;
-    `;
-
     const values = [entity.quantity, entity.order_id, entity.product_id];
 
-    await this.client.query(query, values);
+    await this.client.query(UPDATE_ORDER_ITEM, values);
     return await this.findOrderItemByProductId({
       order_id: entity.order_id,
       product_id: entity.product_id,
@@ -161,13 +118,8 @@ export class OrderRepository extends BaseRepository<Order> {
   }
 
   async deleteOrderItem(order_id: string, product_id: string): Promise<void> {
-    const query = `
-      DELETE FROM ${TABLE_NAME.ORDER_ITEM}
-      WHERE ORDER_ID = $1 AND PRODUCT_ID = $2;
-    `;
-
     const values = [order_id, product_id];
 
-    await this.client.query(query, values);
+    await this.client.query(DELETE_ORDER_ITEM, values);
   }
 }

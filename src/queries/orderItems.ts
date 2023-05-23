@@ -1,0 +1,7 @@
+import { TABLE_NAME } from '../types';
+
+export const INSERT_ORDER_ITEM = `INSERT INTO ${TABLE_NAME.ORDER_ITEM} (product_id, order_id, quantity) VALUES ($1, $2, $3) RETURNING product_id, order_id`;
+export const UPDATE_ORDER_ITEM = `UPDATE ${TABLE_NAME.ORDER_ITEM} SET QUANTITY = $1 WHERE ORDER_ID = $2 AND PRODUCT_ID = $3;`;
+export const DELETE_ORDER_ITEM = `DELETE FROM ${TABLE_NAME.ORDER_ITEM} WHERE ORDER_ID = $1 AND PRODUCT_ID = $2;`;
+export const FIND_ORDER_ITEM_BY_ORDER_ID = `SELECT * FROM ${TABLE_NAME.ORDER_ITEM} WHERE order_id = $1`;
+export const FIND_ORDER_ITEM_BY_ORDER_ID_AND_PRODUCT_ID = `SELECT * FROM ${TABLE_NAME.ORDER_ITEM} WHERE order_id = $1 AND product_id = $2`;
